@@ -198,43 +198,93 @@ done</pre>
     </footer>
 
     <script>lucide.createIcons();</script>
-    <script>
+<script>
 const slides = document.querySelectorAll('.slide');
+const carousel = document.getElementById('carousel');
+
 let current = 0;
+let autoPlay = true;
+let startX = 0;
+let isDragging = false;
+let animationFrame;
 
-function updateCarousel() {
+const spacing = 260;   // відстань між слайдами
+const depth = 500;     // глибина 3D
+const rotate = 45;     // кут 3D
+
+function render() {
   slides.forEach((slide, i) => {
-    const offset = i - current;
-    const absOffset = Math.abs(offset);
+    let offset = i - current;
 
-    let transform = `
+    // Infinite loop logic
+    if (offset > slides.length / 2) offset -= slides.length;
+    if (offset < -slides.length / 2) offset += slides.length;
+
+    const abs = Math.abs(offset);
+
+    slide.style.transform = `
       translate(-50%, -50%)
-      translateX(${offset * 220}px)
-      translateZ(${absOffset === 0 ? 0 : -300}px)
-      rotateY(${offset * -35}deg)
-      scale(${absOffset === 0 ? 1 : 0.8})
+      translateX(${offset * spacing}px)
+      translateZ(${-abs * depth}px)
+      rotateY(${offset * -rotate}deg)
+      scale(${abs === 0 ? 1 : 0.78})
     `;
 
-    slide.style.transform = transform;
-    slide.style.opacity = absOffset > 2 ? 0 : 1;
-    slide.style.zIndex = 100 - absOffset;
+    slide.style.opacity = abs > 4 ? 0 : 1;
+    slide.style.zIndex = 100 - abs;
   });
 }
 
 function next() {
   current = (current + 1) % slides.length;
-  updateCarousel();
+  render();
 }
 
 function prev() {
   current = (current - 1 + slides.length) % slides.length;
-  updateCarousel();
+  render();
 }
 
-// автопрокрутка
-setInterval(next, 4000);
+/* ==== TOUCH + MOUSE DRAG ==== */
+function onStart(x) {
+  isDragging = true;
+  autoPlay = false;
+  startX = x;
+}
 
-updateCarousel();
+function onMove(x) {
+  if (!isDragging) return;
+  const diff = x - startX;
+
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) prev();
+    else next();
+    isDragging = false;
+  }
+}
+
+function onEnd() {
+  isDragging = false;
+  autoPlay = true;
+}
+
+carousel.addEventListener('mousedown', e => onStart(e.clientX));
+carousel.addEventListener('mousemove', e => onMove(e.clientX));
+carousel.addEventListener('mouseup', onEnd);
+carousel.addEventListener('mouseleave', onEnd);
+
+carousel.addEventListener('touchstart', e => onStart(e.touches[0].clientX), {passive:true});
+carousel.addEventListener('touchmove', e => onMove(e.touches[0].clientX), {passive:true});
+carousel.addEventListener('touchend', onEnd);
+
+/* ==== AUTOPLAY LOOP ==== */
+function autoLoop() {
+  if (autoPlay) next();
+  animationFrame = setTimeout(autoLoop, 3500);
+}
+
+render();
+autoLoop();
 </script>
 </body>
 
