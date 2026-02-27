@@ -19,6 +19,7 @@
                 style="background: rgba(16, 185, 129, 0.1); color: var(--accent); padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 700; margin-bottom: 20px;">
                 HACKATHON PROJECT</div>
             <h1>MODUFRAME</h1>
+             <div ><img src="png/logo.png"></div>
             <p style="font-size: 20px; color: #94a3b8; max-width: 800px; margin-bottom: 40px;">
                 Відкрита інженерна екосистема для швидкого прототипування. Гібридний підхід: 3D-друк складних вузлів +
                 доступні дерев’яні елементи.
@@ -95,6 +96,21 @@
                     </ul>
                 </div>
             </div>
+
+ <div class="carousel" id="carousel">
+  <div class="track" id="track">
+    <div class="slide"><img src="png/1.png"></div>
+    <div class="slide"><img src="png/2.png"></div>
+      <div class="slide"><img src="png/3.png"></div>
+      <div class="slide"><img src="png/4.png"></div>
+      <div class="slide"><img src="png/5.png"></div>
+      <div class="slide"><img src="png/6.png"></div>
+      <div class="slide"><img src="png/7.png"></div>
+      <div class="slide"><img src="png/8.png"></div>
+      <div class="slide"><img src="png/9.png"></div>
+
+  </div>
+  </div>
         </section>
 
         <section style="background: rgba(255,255,255,0.02); border-radius: 30px; padding: 60px;">
@@ -178,6 +194,94 @@ done</pre>
     </footer>
 
     <script>lucide.createIcons();</script>
+<script>
+const slides = document.querySelectorAll('.slide');
+const carousel = document.getElementById('carousel');
+
+let current = 0;
+let autoPlay = true;
+let startX = 0;
+let isDragging = false;
+let animationFrame;
+
+const spacing = 260;   // відстань між слайдами
+const depth = 500;     // глибина 3D
+const rotate = 45;     // кут 3D
+
+function render() {
+  slides.forEach((slide, i) => {
+    let offset = i - current;
+
+    // Infinite loop logic
+    if (offset > slides.length / 2) offset -= slides.length;
+    if (offset < -slides.length / 2) offset += slides.length;
+
+    const abs = Math.abs(offset);
+
+    slide.style.transform = `
+      translate(-50%, -50%)
+      translateX(${offset * spacing}px)
+      translateZ(${-abs * depth}px)
+      rotateY(${offset * -rotate}deg)
+      scale(${abs === 0 ? 1 : 0.78})
+    `;
+
+    slide.style.opacity = abs > 4 ? 0 : 1;
+    slide.style.zIndex = 100 - abs;
+  });
+}
+
+function next() {
+  current = (current + 1) % slides.length;
+  render();
+}
+
+function prev() {
+  current = (current - 1 + slides.length) % slides.length;
+  render();
+}
+
+/* ==== TOUCH + MOUSE DRAG ==== */
+function onStart(x) {
+  isDragging = true;
+  autoPlay = false;
+  startX = x;
+}
+
+function onMove(x) {
+  if (!isDragging) return;
+  const diff = x - startX;
+
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) prev();
+    else next();
+    isDragging = false;
+  }
+}
+
+function onEnd() {
+  isDragging = false;
+  autoPlay = true;
+}
+
+carousel.addEventListener('mousedown', e => onStart(e.clientX));
+carousel.addEventListener('mousemove', e => onMove(e.clientX));
+carousel.addEventListener('mouseup', onEnd);
+carousel.addEventListener('mouseleave', onEnd);
+
+carousel.addEventListener('touchstart', e => onStart(e.touches[0].clientX), {passive:true});
+carousel.addEventListener('touchmove', e => onMove(e.touches[0].clientX), {passive:true});
+carousel.addEventListener('touchend', onEnd);
+
+/* ==== AUTOPLAY LOOP ==== */
+function autoLoop() {
+  if (autoPlay) next();
+  animationFrame = setTimeout(autoLoop, 3500);
+}
+
+render();
+autoLoop();
+</script>
 </body>
 
 </html>
